@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Serve Daily Rack locally",
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"-lc",
+				"./scripts/serve.sh --no-open"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		}
+	]
+}

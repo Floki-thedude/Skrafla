@@ -1,0 +1,429 @@
+:root{
+  /* Wordle-like neutral palette */
+  --bg: #121312;
+  --card: #1a1a1b;
+  --text: #ffffff;
+  --muted: #9aa0a6;
+  --accent: #6aaa64;          /* Wordle green */
+  --accent-2: #3a3a3c;        /* neutral border */
+  --danger: #bb2d3b;
+  --gold: #c9b458;            /* Wordle yellow */
+  /* Candy palette */
+  --candy-pink: #ff5fa2;
+  --candy-purple: #8a5cff;
+  --candy-blue: #27c9ff;
+  --candy-green: #2ee59d;
+  --candy-yellow: #ffd166;
+  --candy-orange: #ff9f1c;
+  --card-radius: 16px;
+  --tile-radius: 12px;
+  --shadow-card: 0 6px 12px rgba(0, 0, 0, 0.116);
+  --shadow-tile: 0 6px 14px rgba(0,0,0,.35);
+  /* Apple-like squircle corner radii (elliptical) */
+  /* Use percentage radii so corners stay proportional when scaled */
+  --squircle: 26% 34% 26% 34% / 34% 26% 34% 26%;
+  /* Missing vars used below (map to existing palette) */
+  --ink: var(--text);
+  --ink-muted: #555555;
+  --bg-elev: #1f1f20;
+  --brand: var(--accent);
+  --brand-700: #538d4e;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  background: var(--bg);
+  color: var(--text);
+}
+/* Loader overlay */
+body.preload #loader-overlay{opacity:1;pointer-events:auto}
+#loader-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:100;opacity:0;pointer-events:none;transition:opacity 300ms ease}
+#loader-overlay .spinner{
+  width:48px;height:48px;border-radius: var(--squircle);
+  /* Solid green outline with no internal line */
+  border:3px solid var(--accent);
+  /* Rotate and fade; spinner fades out 0.2s before overlay */
+  animation: spin-accel 1100ms ease-in infinite, spinner-fade 1800ms linear forwards;
+}
+@keyframes spin-accel{
+  0%{ transform: rotate(0deg) }
+  40%{ transform: rotate(60deg) }
+  100%{ transform: rotate(360deg) }
+}
+/* Fade spinner from fully visible to invisible while loader shows */
+@keyframes spinner-fade{
+  from{ opacity: 1 }
+  to{ opacity: 0 }
+}
+
+/* Initial hidden state for content that animates in */
+body.preload .animate-on-load{opacity:0;transform:translateY(5px) scale(0.9)}
+.animate-on-load{transition: opacity 300ms ease, transform 300ms ease}
+@keyframes candy-bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.content-grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width: 1100px){
+  /* With the left column hidden, give main and scoreboard generous min widths */
+  .content-grid{grid-template-columns:minmax(720px, 2.5fr) minmax(380px, 1.2fr);align-items:stretch}
+  .left-col{position:sticky;top:16px;height:fit-content}
+  .side-col{position:sticky;top:16px;min-height:0}
+  .main-col{min-height:0}
+  /* Stretch cards to equal column height and allow internal scrolling */
+  .main-col > .card, .side-col > .card{height:100%;display:flex;flex-direction:column}
+  .side-col .scoreboard{flex:1;min-height:0;overflow:auto}
+}
+.container{
+  /* Reactive max width: scales with viewport, capped for readability */
+  max-width: clamp(320px, 100vw, 1440px);
+  margin: 0 auto;
+  padding-top: 96px;
+  padding-bottom: 24px;
+  /* Keep a consistent 24px from the viewport sides (respecting notches) */
+  padding-left: calc(env(safe-area-inset-left, 0px) + 24px);
+  padding-right: calc(env(safe-area-inset-right, 0px) + 24px);
+}
+header{
+  margin-bottom: 24px;
+}
+.page-header{display:flex;justify-content:flex-start;align-items:flex-start;gap:24px;flex-wrap:wrap;padding-left:0px;margin-top:0px}
+.page-header .title-block{display:flex;flex-direction:column}
+.page-header .puzzle-block{display:none}
+.page-header .puzzle-block .puzzle-meta{text-align:right}
+.header-icons{display:flex;gap:12px}
+.icon-btn{width:42px;height:42px;border:2px solid currentColor;background:transparent;color:var(--text);display:grid;place-items:center;cursor:pointer;transition: transform 80ms ease, background-color 120ms ease, border-color 120ms ease}
+.icon-btn:hover{ transform: translateY(-1px) }
+.icon-btn .icon{font-weight:700}
+.page-header .puzzle-block .value{font-size:18px}
+h1{margin:0 0 4px 0;font-size:28px}
+h1{ color: var(--text) }
+.subtitle{margin:0;color:var(--muted)}
+
+.card{
+  background: var(--card);
+  border: 1px solid var(--accent-2);
+  border-radius: var(--card-radius);
+  padding: 36px 24px; /* 16 top/bottom, 24 sides */
+  margin: 16px 0;
+  box-shadow: none;
+}
+.main-col > .card{ padding-top:36px; padding-bottom:0px }
+.card.small{padding:12px}
+
+.row{
+  display:flex;
+  gap: 24px;
+  align-items: center; /* stabilize vertical alignment */
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.label{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.2px}
+.value{font-size:16px;font-weight:600}
+
+/* Word slots */
+.slots{
+  display:flex;gap:8px;align-items:stretch;margin-top:12px;flex-wrap:nowrap;
+  padding:10px;border-radius:12px;
+  background: var(--card);
+  border:1px solid var(--accent-2);
+  box-shadow: none;
+  overflow-x:auto;overflow-y:hidden;
+  height:auto; /* let slots define height */
+  margin-bottom: 48px; /* extra space below slots */
+}
+
+.rack{
+  display:flex;gap:12px;align-items:stretch;margin:12px 0 0 0;flex-wrap:nowrap;
+  padding:10px;border-radius:12px;
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--accent-2);
+  box-shadow: none;
+  overflow-x:auto;overflow-y:hidden;
+  height:auto; /* let tiles define height */
+}
+
+.rack-slot{
+  flex:1 1 0; border:2px solid #3a3a3c; border-radius:8px;
+  display:flex; align-items:center; justify-content:center; color:var(--muted);
+  background: transparent;
+  box-shadow: none;
+  aspect-ratio: 1 / 1;
+}
+.rack-slot.filled{ border-color:#565758; background:#2b2b2b }
+.rack-slot.droppable{ border-color: var(--accent); background: transparent; transition: border-color .15s ease }
+/* Spacing rules for headings and racks */
+#rack-label + .rack{ margin-top:12px }
+#slots-label{ margin-top:24px }
+#slots-label + .slots{ margin-top:12px }
+
+/* Keep rack and slots from shifting horizontally by reserving max width (7 tiles) */
+@media (min-width: 700px){
+  .rack{ width: 100%; }
+  .slots{ width: 100%; }
+}
+@media (min-width: 1100px){
+  .rack{ width: 100%; }
+  .slots{ width: 100%; }
+}
+.slot{
+  flex:1 1 0; border:2px solid #3a3a3c; border-radius:8px;
+  display:flex; align-items:center; justify-content:center; color:var(--muted);
+  background: transparent;
+  box-shadow: none;
+  aspect-ratio: 1 / 1;
+}
+.slot.filled{ border-color:#565758; background:#2b2b2b }
+.droppable{outline: none !important; outline-offset: 0 !important}
+/* Insertion placeholder inside rack while dragging */
+.rack .insert{
+  flex:1 1 0;border:2px solid transparent;border-radius:var(--squircle);
+  background: transparent;
+  aspect-ratio: 1 / 1;
+}
+/* Scrabble-like tiles */
+.tile{
+  flex:1 1 0; width:auto; height:auto;
+  display:flex; align-items:center; justify-content:center;
+  background: #d7dadc;
+  border: 1px solid #d7dadc;
+  border-radius:8px;
+  position:relative; font-weight:800; letter-spacing:0.4px;
+  aspect-ratio: 1 / 1;
+  font-size: clamp(18px, 3vw, 36px);
+  color:#111;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: grab;
+  user-select: none;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.tile:hover:not(.dragging):not(:active){ transform: scale(1.05) }
+.tile::before{ content: none }
+.tile .pts{
+  position:absolute;right:6px;bottom:4px;
+  font-size: clamp(10px, 1.4vw, 14px);
+  color:#333;font-weight:700
+}
+.tile.ghost{
+  background: rgba(0, 0, 0, 0);
+  border: 1px dashed rgba(255,255,255,0.18);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0), inset 0 -4px 8px rgba(0, 0, 0, 0);
+  pointer-events: none;
+}
+/* Improved dragging state */
+.tile.dragging,
+.tile[draggable]:focus,
+.tile:focus,
+.tile:active {
+  cursor: grabbing;
+  z-index: 1000;
+  outline: none !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
+
+/* Add visual feedback for drag over states */
+.slot.droppable{
+  outline: none !important;
+  outline-offset: 0 !important;
+  background: transparent !important;
+  box-shadow: none;
+  border-color: var(--accent);
+  transition: border-color 0.15s ease;
+}
+
+.rack.droppable{
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
+/* Suppress any child outlines while dragging over rack/slots */
+.rack.droppable, .rack.droppable *,
+.slots.droppable, .slots.droppable *{
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
+.play{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
+.play #share-btn{margin-left:auto}
+.play input{
+  flex:1;background:#0f1318;border:1px solid #222831;color:var(--text);
+  padding:10px 12px;border-radius:8px;font-size:16px
+}
+.play input#word-input{flex:1 1 240px}
+.play button, .actions button{
+  border:1px solid var(--accent-2); color:white; padding:10px 12px;
+  border-radius:8px; font-weight:700; cursor:pointer;
+  background: #2b2b2c;
+  transition: transform 80ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+#submit-btn{ background: var(--accent); border-color: var(--accent) }
+#submit-btn:hover{ background: var(--brand-700); transform: translateY(-1px) }
+.play button:hover{ transform: translateY(-1px) }
+.actions button{ color:#e5e7eb }
+.actions button:hover{ background:#323234; border-color:#4a4a4d; transform: translateY(-1px) }
+.play button:focus-visible, .actions button:focus-visible{outline:2px solid #818cf8;outline-offset:2px}
+.actions{display:flex;gap:8px;margin-top:8px}
+.actions #share-btn{margin-left:auto}
+.play #shuffle-btn, .play #share-btn{color: var(--accent)}
+.message{margin-top:8px;color:var(--muted)}
+.message.error{color:var(--danger)}
+.score{margin-top:8px;font-weight:600}
+.hint{margin-top:6px;color:var(--muted)}
+
+footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center}
+
+/* Screen reader only */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+
+/* Scoreboard */
+.section-title{margin:0 0 8px 0;font-size:24px}
+.scoreboard{list-style:none;padding:0;margin:0}
+.scoreboard li{
+  display:flex;gap:12px;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid #222831
+}
+.scoreboard li:nth-child(odd){ background: transparent; border-radius:0; padding:8px 0 }
+.scoreboard li:hover{ background: rgba(255,255,255,0.04) }
+.scoreboard li:nth-child(1) .lb-avatar,
+.scoreboard li:nth-child(2) .lb-avatar,
+.scoreboard li:nth-child(3) .lb-avatar{ box-shadow: none }
+.scoreboard li:last-child{border-bottom:none}
+.scoreboard .name{font-weight:600}
+.scoreboard .meta{color:var(--muted);font-size:12px}
+
+/* A11y + micro-interactions */
+.tile{transition: transform 120ms ease, box-shadow 120ms ease}
+.tile:active{transform: translateY(1px); box-shadow: 0 1px 0 #c79e61, 0 2px 4px rgba(0,0,0,0.3)}
+.tile:focus-visible{outline: none}
+.droppable{outline: none !important; outline-offset: 0 !important}
+
+@keyframes pop-in{from{transform:scale(0.95)} to{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+/* Removed pop-in on filled slots to avoid scaling existing tiles when rearranging */
+.message.error{animation: shake 220ms ease-in-out}
+.message.success{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:10px 14px;border-radius:10px;backdrop-filter:blur(6px);}
+
+/* HUD */
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.streak-badge{background:#2b2b2c;border:1px solid var(--accent-2);padding:6px 10px;border-radius:999px;font-weight:700}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.settings{display:flex;gap:12px;align-items:center}
+.toggle{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-muted)}
+.toggle input{accent-color:var(--brand)}
+
+/* Onboarding tip */
+.tip{margin-top:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:10px;border-radius:10px;font-size:13px;color:var(--ink)}
+.tip.hidden{display:none}
+.tip-dismiss{margin-left:8px;background:transparent;border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer}
+
+/* Simple celebration animation */
+@keyframes burst{0%{transform:scale(0.6);opacity:0} 30%{opacity:1} 100%{transform:scale(1.2);opacity:0}}
+.celebrate:after{
+  content:"✨";
+  position:absolute;right:12px;top:-8px;font-size:18px;animation:burst 600ms ease-out;
+}
+/* Generic shake utility to trigger on containers */
+.shake{animation: shake 220ms ease-in-out}
+
+/* Collapsible transitions with custom easing */
+details > .collapsible{max-height:0;opacity:0;overflow:hidden;transition:max-height 420ms cubic-bezier(0.70,0.00,0.00,1.00), opacity 420ms cubic-bezier(0.70,0.00,0.00,1.00)}
+details[open] > .collapsible{max-height:1000px;opacity:1}
+
+/* User settings panel */
+.user-controls{display:flex;gap:8px;align-items:center;margin-top:6px;justify-content:space-between}
+.label.avatar-label{margin-left:2px}
+#rack-label{margin-left:2px}
+#slots-label{margin-left:2px}
+.user-controls input{flex:1}
+.user-controls .user-preview{margin-top:0}
+.user-controls input{
+  background:#0f1318;border:1px solid #222831;color:var(--text);
+  padding:8px 10px;border-radius:8px;font-size:14px
+}
+.user-controls select{
+  background:#0f1318;border:1px solid #222831;color:var(--text);
+  padding:8px 10px;border-radius:8px;font-size:14px
+}
+.avatar-grid{display:grid;grid-template-columns:repeat(6, 40px);gap:8px;margin-top:12px}
+.avatar-btn{width:40px;height:40px;display:grid;place-items:center;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:#0f1318;color:white;cursor:pointer;transition: transform 80ms ease, background-color 120ms ease, border-color 120ms ease}
+.avatar-btn:hover{ transform: translateY(-1px) }
+.avatar-btn[aria-pressed="true"]{outline:2px solid var(--accent-2);outline-offset:2px}
+.user-preview{display:flex;align-items:center;gap:10px;margin-top:10px}
+.user-actions{margin-left:auto;display:flex;gap:12px;margin-top:24px}
+.user-actions button{background: rgba(58,134,255,0.18);border:1px solid rgba(58,134,255,0.3);color:white;padding:12px 14px;border-radius:999px;cursor:pointer;transition: transform 120ms ease, background-color 120ms ease}
+.user-actions button:hover{background: rgba(58,134,255,0.28); transform: translateY(-1px)}
+
+/* Remove candy gradients; keep flat buttons */
+
+/* Confetti pieces */
+.confetti-piece{
+  position:fixed; width:8px; height:12px; z-index:1000;
+  border-radius:2px; pointer-events:none; opacity:0.95;
+  animation: confetti-fall 900ms ease-out forwards, confetti-spin 900ms linear forwards;
+}
+@keyframes confetti-fall{0%{transform:translate(0,0)}100%{transform:translate(var(--dx, 0), var(--dy, 120px))}}
+@keyframes confetti-spin{0%{rotate:0deg}100%{rotate:300deg}}
+
+/* Floating score bubbles */
+.score-float{
+  position: fixed; z-index: 1000; pointer-events: none;
+  color: var(--candy-yellow); font-weight: 800; font-size: 16px;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.25), 0 3px 8px rgba(0,0,0,0.25);
+  animation: score-float 700ms ease-out forwards;
+}
+@keyframes score-float{0%{transform:translateY(0) scale(.9);opacity:0}15%{opacity:1}100%{transform:translateY(-28px) scale(1.05);opacity:0}}
+
+/* Jiggle for playful feedback */
+.jiggle{animation: jiggle 380ms ease-in-out}
+@keyframes jiggle{0%{transform:rotate(0)}25%{transform:rotate(-1.2deg)}50%{transform:rotate(0.8deg)}75%{transform:rotate(-0.6deg)}100%{transform:rotate(0)}}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:50}
+.modal.hidden{display:none}
+.modal-content{background:var(--bg-elev);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:16px;min-width:280px;box-shadow:var(--shadow-card)}
+.modal-content h3{margin:0 0 8px 0}
+.result-line{display:flex;justify-content:space-between;margin:6px 0}
+.modal-actions{display:flex;justify-content:flex-end;margin-top:12px}
+.modal-actions button{background:var(--brand);color:white;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;transition: transform 80ms ease, background-color 120ms ease}
+.modal-actions button:hover{background:var(--brand-700); transform: translateY(-1px)}
+
+/* Leaderboard presentational helpers */
+.lb-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.lb-row:last-child{border-bottom:none}
+.lb-medal{width:20px;text-align:center}
+.lb-avatar{width:32px;height:32px;border-radius:999px;display:grid;place-items:center;font-weight:700;color:white;background:linear-gradient(180deg,#334155,#111827)}
+.lb-info{display:flex;flex-direction:column}
+.lb-name{font-weight:600;display:flex;align-items:center;gap:12px}
+.lb-name .lb-medal{width:auto}
+.lb-date{font-size:12px;color:var(--ink-muted)}
+.lb-score{margin-left:auto;font-weight:700}
+
+/* Mobile tile size */
+@media (max-width: 400px){
+  .tile{width:44px;height:44px;font-size:18px}
+  .tile .pts{font-size:10px}
+}
+.site-header{display:flex;justify-content:space-between;align-items:center;padding:36px;padding-bottom:24px;padding-top:24px;gap:12px;border-bottom:2px solid var(--accent-2);margin-bottom:0}
+.site-header .header-left{display:flex;align-items:center;gap:10px}
+.site-header .header-username{color:var(--ink);font-weight:600;font-size:14px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.site-header .puzzle-block{display:flex;align-items:flex-start;gap:12px;margin-left:auto}
+.site-header .puzzle-meta{text-align:right}
+.site-header .icon-btn{width:36px;height:36px;border:2px solid currentColor;border-radius:var(--squircle);background:transparent;color:var(--text);display:grid;place-items:center;cursor:pointer}
+.site-header .icon{font-weight:700}
+.hidden{display:none}
+
+/* Overlay menus */
+.menu-card{position:fixed;z-index:60;background:var(--card);border:1px solid rgba(255,255,255,0.12);border-radius:var(--card-radius);box-shadow:var(--shadow-card);padding:12px;min-width:260px}
+#settings-menu{top:90px;right:36px}
+#help-menu{top:90px;right:36px}
+#player-menu{top:90px;left:36px;max-width:360px}
+
+/* Hide best possible word feature */
+#best-result{display:none}

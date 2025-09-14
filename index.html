@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Daily Rack — Highest Scoring Word</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="preload">
+    <div id="loader-overlay" aria-live="polite" aria-busy="true">
+      <div class="spinner" role="status" aria-label="Loading"></div>
+    </div>
+    <header class="site-header animate-on-load">
+      <div class="header-left">
+        <button id="header-avatar" class="icon-btn header-avatar" aria-hidden="true" tabindex="-1"><span class="icon">�</span></button>
+        <div id="header-username" class="header-username">Sign in</div>
+      </div>
+      <div class="puzzle-block">
+        <div class="puzzle-meta">
+          <div class="label">Puzzle Date</div>
+          <div id="puzzle-date" class="value"></div>
+        </div>
+  <div class="streak-badge" id="streak-badge" title="Consecutive days with a valid word">🔥 0</div>
+        <div class="header-icons">
+          <button id="sound-btn" class="icon-btn" aria-label="Sound on"><span class="icon">🔊</span></button>
+          <button id="help-btn" class="icon-btn" aria-label="Help"><span class="icon">?</span></button>
+        </div>
+      </div>
+    </header>
+  <main class="container animate-on-load">
+      <header class="page-header">
+        <div class="title-block">
+          <h1>Skrafla dagsins</h1>
+          <p class="subtitle">You get one Scrabble hand. Make your highest scoring word.</p>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <aside class="left-col hidden"></aside>
+        <div class="main-col">
+          <section class="card" role="region" aria-labelledby="hud-heading">
+            <div class="hud"></div>
+            
+
+            <div class="label" id="rack-label">Your Rack</div>
+            <div id="rack" class="rack" aria-label="Your rack — drag or click tiles to build your word" aria-dropeffect="move"></div>
+
+            <div class="label" id="slots-label">Your Word</div>
+            <div id="word-slots" class="slots" role="group" aria-labelledby="slots-label" aria-dropeffect="move" aria-live="polite"></div>
+
+            <div id="onboarding-tip" class="tip hidden" role="note">
+              Drag or click tiles into the green row to build a word. Submit to score — only Icelandic words are allowed. <button id="tip-dismiss" type="button" class="tip-dismiss">Got it</button>
+            </div>
+
+          <form id="play-form" class="play">
+            <button id="submit-btn" type="submit">Submit</button>
+            <button id="shuffle-btn" type="button" title="Shuffle rack visually">Shuffle</button>
+            <button id="reset-btn" type="button" title="Move tiles from word back to rack">Reset</button>
+            <button id="share-btn" type="button">Share</button>
+          </form>
+
+        <div id="message" class="message" role="status" aria-live="polite"></div>
+        <div id="announce" class="sr-only" aria-live="polite"></div>
+          <div id="score-breakdown" class="score"></div>
+          <div id="best-result" class="hint"></div>
+
+          <div class="actions"></div>
+          </section>
+
+          
+        </div>
+        <aside class="side-col" role="complementary" aria-labelledby="board-heading">
+          <section class="card">
+            <h2 class="section-title" id="board-heading">Scoreboard</h2>
+            <ul id="scoreboard-list" class="scoreboard" role="list" aria-live="polite"></ul>
+          </section>
+        </aside>
+      </div>
+
+  </main>
+
+  <script src="app.js"></script>
+  <!-- Result Modal -->
+    <div id="result-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <div class="modal-content">
+        <h3 id="result-title">Your Result</h3>
+        <div class="result-line"><span>Score:</span> <strong id="modal-score">0</strong></div>
+        <div class="result-line"><span>Position:</span> <strong id="modal-rank">#-</strong></div>
+        <div class="modal-actions"><button id="modal-close" type="button">Close</button></div>
+      </div>
+    </div>
+    
+    <!-- Overlay Menus -->
+    <div id="settings-menu" class="menu-card hidden">
+      <div class="label">Settings</div>
+      <div class="settings">
+        <label class="toggle"><input type="checkbox" id="toggle-sound"/> <span>Sound</span></label>
+        <label class="toggle" title="Developer helper: bypass dictionary check"><input type="checkbox" id="toggle-dev"/> <span>Dev: Allow any word</span></label>
+      </div>
+    </div>
+    <div id="help-menu" class="menu-card hidden">
+      <div class="label">How it works</div>
+      <ul>
+        <li>One puzzle per day. Everyone gets the same 7-letter rack.</li>
+        <li>Words must be made only from your rack letters.</li>
+        <li>Standard Scrabble letter values. 50-point bonus for using all 7 tiles.</li>
+        <li>Dictionary check is enabled if a word list is present.</li>
+      </ul>
+    </div>
+    <div id="player-menu" class="menu-card hidden">
+      <div class="label">Player</div>
+      <div class="user-controls">
+        <input id="username-input" type="text" placeholder="Enter username" autocomplete="off" />
+        <div class="user-preview">
+          <div id="user-preview-avatar" class="lb-avatar" aria-hidden="true">🙂</div>
+          <div class="lb-info">
+            <div id="user-preview-name" class="lb-name">Guest</div>
+            <div class="lb-date">Preview</div>
+          </div>
+        </div>
+      </div>
+      <div class="label avatar-label" style="margin-top:8px">Choose Avatar</div>
+      <div id="avatar-grid" class="avatar-grid" role="group" aria-label="Choose avatar">
+        <button type="button" class="avatar-btn" data-avatar="🙂">🙂</button>
+        <button type="button" class="avatar-btn" data-avatar="😎">😎</button>
+        <button type="button" class="avatar-btn" data-avatar="😀">😀</button>
+        <button type="button" class="avatar-btn" data-avatar="🤖">🤖</button>
+        <button type="button" class="avatar-btn" data-avatar="👩‍💻">👩‍💻</button>
+        <button type="button" class="avatar-btn" data-avatar="👨‍💻">👨‍💻</button>
+        <button type="button" class="avatar-btn" data-avatar="🐱">🐱</button>
+        <button type="button" class="avatar-btn" data-avatar="🐶">🐶</button>
+        <button type="button" class="avatar-btn" data-avatar="🦊">🦊</button>
+        <button type="button" class="avatar-btn" data-avatar="🐼">🐼</button>
+        <button type="button" class="avatar-btn" data-avatar="🦁">🦁</button>
+        <button type="button" class="avatar-btn" data-avatar="🐵">🐵</button>
+        <button type="button" class="avatar-btn" data-avatar="🦉">🦉</button>
+        <button type="button" class="avatar-btn" data-avatar="🐸">🐸</button>
+        <button type="button" class="avatar-btn" data-avatar="🐳">🐳</button>
+        <button type="button" class="avatar-btn" data-avatar="🐯">🐯</button>
+        <button type="button" class="avatar-btn" data-avatar="🦄">🦄</button>
+        <button type="button" class="avatar-btn" data-avatar="🎲">🎲</button>
+      </div>
+      <div class="user-actions">
+        <button id="avatar-random" type="button">Random</button>
+  <button id="avatar-save" type="button" title="Save your name and avatar">Save</button>
+      </div>
+    </div>
+  </body>
+  </html>
