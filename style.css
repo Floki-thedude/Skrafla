@@ -1,8 +1,8 @@
 :root{
   /* Wordle-like neutral palette */
-  --bg: #121312;
-  --card: #1a1a1b;
-  --text: #ffffff;
+  --bg: #1b271b;
+  --card: #131a15;
+  --text: #fdfef8;
   --muted: #9aa0a6;
   --accent: #6aaa64;          /* Wordle green */
   --accent-2: #3a3a3c;        /* neutral border */
@@ -33,7 +33,7 @@
 html,body{height:100%}
 body{
   margin:0;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: 'Open Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   background: var(--bg);
   color: var(--text);
 }
@@ -44,8 +44,8 @@ body.preload #loader-overlay{opacity:1;pointer-events:auto}
   width:48px;height:48px;border-radius: var(--squircle);
   /* Solid green outline with no internal line */
   border:3px solid var(--accent);
-  /* Rotate and fade; spinner fades out 0.2s before overlay */
-  animation: spin-accel 1100ms ease-in infinite, spinner-fade 1800ms linear forwards;
+  /* Rotate over 2s and fade out 0.2s before overlay */
+  animation: spin-accel 2000ms ease-in infinite, spinner-fade 1800ms linear forwards;
 }
 @keyframes spin-accel{
   0%{ transform: rotate(0deg) }
@@ -59,7 +59,7 @@ body.preload #loader-overlay{opacity:1;pointer-events:auto}
 }
 
 /* Initial hidden state for content that animates in */
-body.preload .animate-on-load{opacity:0;transform:translateY(5px) scale(0.9)}
+body.preload .animate-on-load{opacity:0;transform:translateY(5px) scale(0.95)}
 .animate-on-load{transition: opacity 300ms ease, transform 300ms ease}
 @keyframes candy-bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 .content-grid{display:grid;grid-template-columns:1fr;gap:16px}
