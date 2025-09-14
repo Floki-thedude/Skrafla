@@ -77,7 +77,7 @@ body.preload .animate-on-load{opacity:0;transform:translateY(5px) scale(0.95)}
   /* Reactive max width: scales with viewport, capped for readability */
   max-width: clamp(320px, 100vw, 1440px);
   margin: 0 auto;
-  padding-top: 96px;
+  padding-top: 24px;
   padding-bottom: 24px;
   /* Keep a consistent 24px from the viewport sides (respecting notches) */
   padding-left: calc(env(safe-area-inset-left, 0px) + 24px);
